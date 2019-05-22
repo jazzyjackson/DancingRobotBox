@@ -13,10 +13,11 @@
 
 class Posegram {
   public:
-    Posegram(KnobState* knobState, DutyStruct* X_INPUT, DutyStruct* Y_INPUT, ModeSwitch* modeSwitch, MotorState* motorState, LightStage* lightStage, Broadcast* broadcast);
+    Posegram(KnobState *knobState, DutyStruct *X_INPUT, DutyStruct *Y_INPUT, ModeSwitch *modeSwitch, MotorState *motorState, LightStage *lightStage, Broadcast *broadcast);
     void programPosition();
     void playEachPose();
     void followTheLeader();
+    byte nextBeat();
   
   private:
     int poseLength;
@@ -24,7 +25,6 @@ class Posegram {
     byte lastBeat;
     long lastPose;
     long debounceNext;
-      
     KnobState _knobState;
     DutyStruct _X_INPUT;
     DutyStruct _Y_INPUT;
@@ -34,25 +34,18 @@ class Posegram {
     Broadcast _broadcast;
 };
       
-Posegram::Posegram(
-    KnobState* knobState,
-    DutyStruct* X_INPUT,
-    DutyStruct* Y_INPUT,
-    ModeSwitch* modeSwitch,
-    MotorState* motorState,
-    LightStage* lightStage,
-    Broadcast* broadcast
-){
+Posegram::Posegram( KnobState *knobState, DutyStruct *X_INPUT, DutyStruct *Y_INPUT, ModeSwitch *modeSwitch, MotorState *motorState, LightStage *lightStage, Broadcast *broadcast){
   _knobState = *knobState;
-  _X_INPUT = *X_INPUT,
-  _Y_INPUT = *Y_INPUT,
-  _modeSwitch = *modeSwitch,
-  _motorState = *motorState,
-  _lightStage = *lightStage,
-  _broadcast = *broadcast
+  _X_INPUT = *X_INPUT;
+  _Y_INPUT = *Y_INPUT;
+  _modeSwitch = *modeSwitch;
+  _motorState = *motorState;
+  _lightStage = *lightStage;
+  _broadcast = *broadcast;
+  lastPose = millis();
 }
       
-void Posegram::nextBeat(){
+byte Posegram::nextBeat(){
   if(debounceNext < millis() - debounceTimeout){
     debounceNext = millis();
     beat = (beat + 1) % 8;
@@ -65,9 +58,11 @@ void Posegram::programPosition(){
 void Posegram::playEachPose(){
   // check what the last update to X_INPUT/ Y_INPUT was....
   poseLength = 60000 / defaultTempo;
- 
-  if(lastPose < millis() - poseLength){
+  
+  if(lastPose < (millis() - poseLength)){
     lastPose = millis();
+    nextBeat();
+    _lightStage.writeBeat(beat);
   }
 }
 

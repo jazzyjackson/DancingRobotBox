@@ -21,7 +21,10 @@
  * 
  */
 
+#ifndef DutyCycle_h
+#define DutyCycle_h
 
+#include "Arduino.h"
 
 typedef struct{
     byte pin;
@@ -47,4 +50,6 @@ typedef struct{
       return map(this->timeHigh, 0, this->timeLow + this->timeHigh, 0, 255);
     }
     
-} DutyCycle;
+} DutyStruct;
+
+#endif

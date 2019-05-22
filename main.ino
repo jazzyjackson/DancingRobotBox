@@ -19,19 +19,16 @@
 #define MOTOR_Y           11 // Clock 2 PWM
 #define NEXTBEAT_PIN      12 // digitalRead
 
-KnobState knobState(
+KnobState knobState = {
   KNOB_X,
   KNOB_Y
-);
-DutyStruct X_INPUT = {PWN_INPUT_X, 0, 0, 0, 0};
+};
+DutyStruct X_INPUT = {PWM_INPUT_X, 0, 0, 0, 0};
 DutyStruct Y_INPUT = {PWM_INPUT_Y, 0, 0, 0, 0};
-ModeSwitch modeSwitch(
-  MODESWITCH_PIN_A,
-  MODESWITCH_PIN_B
-);
+ModeSwitch modeSwitch( MODESWITCH_PIN_A, MODESWITCH_PIN_B );
 MotorState motorState(
   MOTOR_X,
-  MOTOR_Y,
+  MOTOR_Y
 );
 LightStage lightStage(
   NEOPIXEL_PIN
@@ -42,18 +39,18 @@ Broadcast broadcast(
 );
 
 Posegram posegram(
-  modeSwitch,
-  broadcast,
-  dutystruct,
-  knobState,
-  lightStage,
-  motorState,
-  NEXTBEAT_PIN
+  &knobState,
+  &X_INPUT,
+  &Y_INPUT,
+  &modeSwitch,
+  &motorState,
+  &lightStage,
+  &broadcast
 );
 
 void nextBeatHelper(){ posegram.nextBeat(); }
-void updateXHelper(){ X_INPUT.updateDutyCycle(); }
-void updateYHelper(){ Y_INPUT.updateDutyCycle(); }
+void updateXHelper(){ X_INPUT.dutyCycleUpdate(); }
+void updateYHelper(){ Y_INPUT.dutyCycleUpdate(); }
 
 void setup() {
   attachInterrupt(digitalPinToInterrupt(NEXTBEAT_PIN), nextBeatHelper, RISING);

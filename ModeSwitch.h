@@ -13,11 +13,15 @@
   }
   
  */
+#ifndef ModeSwitch_h
+#define ModeSwitch_h
 
+#include "Arduino.h"
 
-class ModeSwitch {
+class ModeSwitch{
   public:
     ModeSwitch(int PIN_A, int PIN_B);
+    ModeSwitch();
     byte getModeState();
 
   private:
@@ -25,6 +29,9 @@ class ModeSwitch {
     int DOWNSIDE;
 };
 
+ModeSwitch::ModeSwitch(){
+  
+}
 ModeSwitch::ModeSwitch(int PIN_A, int PIN_B){
   UPSIDE = PIN_A;
   DOWNSIDE = PIN_B;
@@ -40,3 +47,5 @@ byte ModeSwitch::getModeState(){
   else 
     return 2; // 'middle', follow mode
 }
+
+#endif

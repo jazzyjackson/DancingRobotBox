@@ -1,17 +1,23 @@
+#ifndef LightStage_h
+#define LightStage_h
+
 #include <Adafruit_NeoPixel.h>
 
 // TODO add color to constructor
 
-class LightStage {
+class LightStage{
   private:
     byte lastBeat;
     Adafruit_NeoPixel strip;
   public:
+    LightStage();
     LightStage(int pin);
     void writeBeat(byte beatNumber);
 //    void writeFill(color);
 };
 
+LightStage::LightStage(){
+}
 LightStage::LightStage(int pin){
   lastBeat = 7;
   strip = Adafruit_NeoPixel(8, pin); // 8 beats, 8 LEDs
@@ -31,9 +37,4 @@ void LightStage::writeBeat(byte beatNumber){
 //  strip.fill(color)
 //}
 
-//void nextBeat(){
-//  if(recentClick < millis() - 200){
-//      beat = (beat + 1) % 8;
-//  }
-//  recentClick = millis();
-//}
+#endif
