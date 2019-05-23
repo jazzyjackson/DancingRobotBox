@@ -29,9 +29,7 @@ class ModeSwitch{
     int DOWNSIDE;
 };
 
-ModeSwitch::ModeSwitch(){
-  
-}
+ModeSwitch::ModeSwitch(){}
 ModeSwitch::ModeSwitch(int PIN_A, int PIN_B){
   UPSIDE = PIN_A;
   DOWNSIDE = PIN_B;

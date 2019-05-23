@@ -5,36 +5,39 @@
 
 // TODO add color to constructor
 
-class LightStage{
+class LightStage {
   private:
     byte lastBeat;
-    Adafruit_NeoPixel strip;
+    uint32_t beatColor;
+    uint32_t lastBeatColor;
   public:
+    Adafruit_NeoPixel strip;
     LightStage();
     LightStage(int pin);
-    void writeBeat(byte beatNumber);
-//    void writeFill(color);
+    void updateBeat(byte beatNumber, int hue, int saturation, int brightness);
+    void writeFill(uint32_t color);
 };
 
-LightStage::LightStage(){
-}
-LightStage::LightStage(int pin){
+
+LightStage::LightStage() {}
+LightStage::LightStage(int pin) {
   lastBeat = 7;
   strip = Adafruit_NeoPixel(8, pin); // 8 beats, 8 LEDs
   strip.begin();
 }
 
-void LightStage::writeBeat(byte beatNumber){
-  if(beatNumber != lastBeat){
+void LightStage::updateBeat(byte beatNumber, int hue, int saturation, int brightness) {
+  beatColor = strip.ColorHSV(hue, saturation, brightness);
+  if (beatNumber != lastBeat or beatColor != lastBeatColor) {
     lastBeat = beatNumber;
     strip.clear();
-    strip.setPixelColor(beatNumber, 100, 10, 10);
+    strip.setPixelColor(beatNumber, beatColor);
     strip.show();
   }
 }
 
-//void LightStage::writeFill(color){
-//  strip.fill(color)
-//}
+void LightStage::writeFill(uint32_t color) {
+  strip.fill(color);
+}
 
 #endif

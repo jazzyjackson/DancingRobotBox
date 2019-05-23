@@ -5,6 +5,7 @@
 #include "LightStage.h"  // provides simple interface to NeoPixels, avoids unnecessary writes
 #include "MotorState.h"  // writes positions to servos X and Y
 #include "Posegram.h"    // interfaces with EEPROM to remember poses programmed, X and Y, beats 1-8.
+#include "PinChangeInterrupt.h"
 
 #define KNOB_X            A0 // ADC0
 #define KNOB_Y            A1 // ADC1
@@ -17,7 +18,8 @@
 #define BROADCAST_X       9  // Clock 1 PWM
 #define BROADCAST_Y       10 // Clock 1 PWM
 #define MOTOR_Y           11 // Clock 2 PWM
-#define NEXTBEAT_PIN      12 // digitalRead
+#define NEXTBEAT_PIN      12 // PCINT
+
 
 KnobState knobState = {
   KNOB_X,
@@ -25,7 +27,10 @@ KnobState knobState = {
 };
 DutyStruct X_INPUT = {PWM_INPUT_X, 0, 0, 0, 0};
 DutyStruct Y_INPUT = {PWM_INPUT_Y, 0, 0, 0, 0};
-ModeSwitch modeSwitch( MODESWITCH_PIN_A, MODESWITCH_PIN_B );
+ModeSwitch modeSwitch(
+  MODESWITCH_PIN_A,
+  MODESWITCH_PIN_B
+);
 MotorState motorState(
   MOTOR_X,
   MOTOR_Y
@@ -53,13 +58,15 @@ void updateXHelper(){ X_INPUT.dutyCycleUpdate(); }
 void updateYHelper(){ Y_INPUT.dutyCycleUpdate(); }
 
 void setup() {
-  attachInterrupt(digitalPinToInterrupt(NEXTBEAT_PIN), nextBeatHelper, RISING);
-  attachInterrupt(digitalPinToInterrupt(MODESWITCH_PIN_A), updateXHelper, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(MODESWITCH_PIN_B), updateYHelper, CHANGE);
+  pinMode(NEXTBEAT_PIN, INPUT_PULLUP);
+  attachPCINT(digitalPinToPCINT(NEXTBEAT_PIN), nextBeatHelper, FALLING);
+  attachInterrupt(digitalPinToInterrupt(PWM_INPUT_X), updateXHelper, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(PWM_INPUT_Y), updateYHelper, CHANGE);
 }
 
 void loop() {
-  switch(modeSwitch.getModeState()){
+  switch(0){
+//  switch(modeSwitch.getModeState()){
     case 0: posegram.programPosition(); break;
     case 1: posegram.playEachPose();    break;
     case 2: posegram.followTheLeader(); break;

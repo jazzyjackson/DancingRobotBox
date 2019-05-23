@@ -8,8 +8,15 @@
 #include "LightStage.h"  // provides simple interface to NeoPixels, avoids unnecessary writes
 #include "MotorState.h"  // writes positions to servos X and Y
 
-#define debounceTimeout 200
+#define clickDebounce 400
 #define defaultTempo 120
+
+typedef struct {
+  int h;
+  int s;
+  int b;
+} colorHSV;
+
 
 class Posegram {
   public:
@@ -24,7 +31,9 @@ class Posegram {
     byte beat;
     byte lastBeat;
     long lastPose;
-    long debounceNext;
+    long lastClick;
+    colorHSV poses[8];
+    
     KnobState _knobState;
     DutyStruct _X_INPUT;
     DutyStruct _Y_INPUT;
@@ -42,17 +51,52 @@ Posegram::Posegram( KnobState *knobState, DutyStruct *X_INPUT, DutyStruct *Y_INP
   _motorState = *motorState;
   _lightStage = *lightStage;
   _broadcast = *broadcast;
+  beat = 0;
+  lastBeat = 7;
   lastPose = millis();
-}
-      
-byte Posegram::nextBeat(){
-  if(debounceNext < millis() - debounceTimeout){
-    debounceNext = millis();
-    beat = (beat + 1) % 8;
+  lastClick = millis();
+
+  for(int i = 0; i < 8; i++){
+    poses[i] = {120, 255, 120};
   }
 }
-      
+
+byte Posegram::nextBeat(){
+  if(lastClick < millis() - clickDebounce){
+      lastClick = millis();
+      beat = (beat + 1) % 8;
+  }
+}
+
 void Posegram::programPosition(){
+  
+  _knobState.updateKnobs();
+ // _motorState.updateMotor(&_knobState)
+
+  if(lastBeat != beat){
+    lastBeat = beat;
+    _knobState.lockKnobs();
+    _lightStage.updateBeat(beat, poses[beat].h, poses[beat].s, poses[beat].b);
+  } else {
+    if(_knobState.x >= 0){
+      // overwrite the stored hue only if knobs are unlocked (-1 is locked, >= 0 is unlocked)
+      poses[beat].h = map(_knobState.x, 0, 1023, 0, 65536);
+      _lightStage.updateBeat(beat, poses[beat].h, poses[beat].s, poses[beat].b);
+    }
+    if(_knobState.y >= 0){
+      poses[beat].b = map(_knobState.y, 0, 1023, 0, 255);
+      _lightStage.updateBeat(beat, poses[beat].h, poses[beat].s, poses[beat].b);
+    }
+  }
+ 
+//  EEPROM.get(beat, pose)
+  // check if we're on a new beat
+  // if so, load from memory (updateBeat),
+    // set 'knobLocked'
+    // store knob position
+    // exit
+
+  // if knob locked, don't worry about it
 }
 
 void Posegram::playEachPose(){
@@ -62,7 +106,7 @@ void Posegram::playEachPose(){
   if(lastPose < (millis() - poseLength)){
     lastPose = millis();
     nextBeat();
-    _lightStage.writeBeat(beat);
+    _lightStage.updateBeat(beat, 255, 255, 255);
   }
 }
 
