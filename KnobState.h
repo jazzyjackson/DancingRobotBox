@@ -29,8 +29,8 @@ KnobState::KnobState(int x_pin, int y_pin){
 }
 
 void KnobState::lockKnobs(){
-  _locked_x = x;
-  _locked_y = y;
+  if(x >= 0){ _locked_x = x; }
+  if(y >= 0){ _locked_y = y; }
   x = -1;
   y = -1;
 }
