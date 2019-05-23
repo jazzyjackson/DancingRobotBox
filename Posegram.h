@@ -1,6 +1,7 @@
 #ifndef Posegram_h
 #define Posegram_h
 
+#include <EEPROM.h>
 #include "ModeSwitch.h"  // handles 3-position throw switch
 #include "Broadcast.h"   // writes PWM output for pose-followers
 #include "DutyStruct.h"  // keeps up with the output from another bot's Broadcast
@@ -16,6 +17,32 @@ typedef struct {
   int s;
   int b;
 } colorHSV;
+
+// this is gonna hold a temporary array
+// reload and commit will transfer values in and out of array
+typedef struct {
+  
+  colorHSV temp;
+  int address;
+
+  void commit(int index){
+    address = index * sizeof(colorHSV);
+    EEPROME.put(address, color);
+    EEPROMSE.put
+  }
+  
+  colorHSV get(byte index){
+    
+    address = index * sizeof(colorHSV);
+    EEPROM.get(address, this->temp);
+    return this->temp;
+  }
+
+  void put(byte index, colorHSV color){
+
+  }
+  
+} poses;
 
 
 class Posegram {
@@ -69,17 +96,18 @@ byte Posegram::nextBeat(){
 }
 
 void Posegram::programPosition(){
-  
+
   _knobState.updateKnobs();
  // _motorState.updateMotor(&_knobState)
 
   if(lastBeat != beat){
+    poses.commit(lastBeat)
     lastBeat = beat;
     _knobState.lockKnobs();
-    _lightStage.updateBeat(beat, poses[beat].h, poses[beat].s, poses[beat].b);
+    pose = poses.get(beat)
+    _lightStage.updateBeat(beat, pose.h, pose.s, pose.b);
   } else {
     if(_knobState.x >= 0){
-      // overwrite the stored hue only if knobs are unlocked (-1 is locked, >= 0 is unlocked)
       poses[beat].h = map(_knobState.x, 0, 1023, 0, 65536);
       _lightStage.updateBeat(beat, poses[beat].h, poses[beat].s, poses[beat].b);
     }
@@ -88,17 +116,8 @@ void Posegram::programPosition(){
       _lightStage.updateBeat(beat, poses[beat].h, poses[beat].s, poses[beat].b);
     }
   }
- 
-//  EEPROM.get(beat, pose)
-  // check if we're on a new beat
-  // if so, load from memory (updateBeat),
-    // set 'knobLocked'
-    // store knob position
-    // exit
 
-  // if knob locked, don't worry about it
 }
-
 void Posegram::playEachPose(){
   // check what the last update to X_INPUT/ Y_INPUT was....
   poseLength = 60000 / defaultTempo;
@@ -106,7 +125,7 @@ void Posegram::playEachPose(){
   if(lastPose < (millis() - poseLength)){
     lastPose = millis();
     nextBeat();
-    _lightStage.updateBeat(beat, 255, 255, 255);
+      _lightStage.updateBeat(beat, poses[beat].h, poses[beat].s, poses[beat].b);
   }
 }
 

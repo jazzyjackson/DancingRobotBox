@@ -1,7 +1,7 @@
 #ifndef KnobState_h
 #define KnobState_h
 
-#define LOCK_THRESHOLD 30
+#define LOCK_THRESHOLD 50
 
 class KnobState {
   public:

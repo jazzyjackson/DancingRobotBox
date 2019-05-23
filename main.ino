@@ -58,6 +58,7 @@ void updateXHelper(){ X_INPUT.dutyCycleUpdate(); }
 void updateYHelper(){ Y_INPUT.dutyCycleUpdate(); }
 
 void setup() {
+  Serial.begin(9600);
   pinMode(NEXTBEAT_PIN, INPUT_PULLUP);
   attachPCINT(digitalPinToPCINT(NEXTBEAT_PIN), nextBeatHelper, FALLING);
   attachInterrupt(digitalPinToInterrupt(PWM_INPUT_X), updateXHelper, CHANGE);
@@ -65,8 +66,7 @@ void setup() {
 }
 
 void loop() {
-  switch(0){
-//  switch(modeSwitch.getModeState()){
+  switch(modeSwitch.getModeState()){
     case 0: posegram.programPosition(); break;
     case 1: posegram.playEachPose();    break;
     case 2: posegram.followTheLeader(); break;

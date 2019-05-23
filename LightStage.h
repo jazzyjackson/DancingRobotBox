@@ -28,6 +28,7 @@ LightStage::LightStage(int pin) {
 
 void LightStage::updateBeat(byte beatNumber, int hue, int saturation, int brightness) {
   beatColor = strip.ColorHSV(hue, saturation, brightness);
+ // Serial.println(beatColor);
   if (beatNumber != lastBeat or beatColor != lastBeatColor) {
     lastBeat = beatNumber;
     strip.clear();
