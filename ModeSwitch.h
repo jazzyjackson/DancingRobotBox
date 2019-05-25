@@ -16,8 +16,6 @@
 #ifndef ModeSwitch_h
 #define ModeSwitch_h
 
-#include "Arduino.h"
-
 class ModeSwitch{
   public:
     ModeSwitch(int PIN_A, int PIN_B);

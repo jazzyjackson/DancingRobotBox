@@ -1,10 +1,12 @@
 #ifndef LightStage_h
 #define LightStage_h
 
+
 #include <Adafruit_NeoPixel.h>
 
 #define saturation 255
-#define brightness 120
+#define stage_brightness 120
+#define backdrop_brightness 50
 
 /*
  * Controls a strip of 8 neopixels, initializing via constructor with just the pin number.
@@ -53,8 +55,8 @@ void LightStage::updateBeat(byte beatNumber, short backdropHue, short stageHue) 
     
     backdropHue = convert10to16bit(backdropHue);
     stageHue = convert10to16bit(stageHue);
-    backdropColor = strip.gamma32(strip.ColorHSV(backdropHue, saturation, brightness));
-    stageColor    = strip.gamma32(strip.ColorHSV(stageHue, saturation, brightness));
+    backdropColor = strip.gamma32(strip.ColorHSV(backdropHue, saturation, backdrop_brightness));
+    stageColor    = strip.gamma32(strip.ColorHSV(stageHue, saturation, stage_brightness));
 
     lastBeat = beatNumber;
 

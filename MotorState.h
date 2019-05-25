@@ -2,9 +2,6 @@
 #define MotorState_h
 
 #include <Adafruit_TiCoServo.h>
-/* SG90 microservo requires pulses between 1 and 2 ms*/
-#define SERVO_MIN 1000
-#define SERVO_MAX 2000
 
 class MotorState {
   private:
@@ -14,22 +11,26 @@ class MotorState {
   public:
     MotorState(int servo_pin_x, int servo_pin_y);
     MotorState();
-    void updateMotors(short stage, short backdrop);
+    void updateMotors(int stage, int backdrop);
 };
 
-MotorState::MotorState(){
-  
-}
+MotorState::MotorState(){}
+
 MotorState::MotorState(int backdrop_pin, int stage_pin){
-
   servo_backdrop.attach(backdrop_pin);
-  servo_stage.attach(stage_pin);
+  servo_stage.attach(stage_pin); 
 }
 
 
-void MotorState::updateMotors(short stage, short backdrop){
-  servo_stage.write(stage);
-  servo_backdrop.write(backdrop);
+void MotorState::updateMotors(int backdrop, int stage){
+  int s = constrain(map(stage, 0, 1023, 500, 2500), 500, 2500);
+  int b = constrain(map(backdrop, 0, 1023, 500, 2500), 500, 2500);
+//  Serial.print(s);
+//  Serial.print(" ");
+//  Serial.println(b);
+  servo_stage.write(s);
+  delay(20);
+  servo_backdrop.write(b);
 }
 
 #endif

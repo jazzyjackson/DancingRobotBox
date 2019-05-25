@@ -1,8 +1,6 @@
 #ifndef Broadcast_h
 #define Broadcast_h
 
-#include "Arduino.h"
-
 class Broadcast{
   public:
     Broadcast(int stage_pin, int backdrop_pin);

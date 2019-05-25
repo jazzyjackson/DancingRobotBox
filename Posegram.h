@@ -69,25 +69,22 @@ byte Posegram::nextBeat(){
 
 void Posegram::programPosition(){
   _knobState.updateKnobs();
- // _motorState.updateMotors(&_knobState);
-
   if(lastBeat != beat){
     lastBeat = beat;
     _knobState.lockKnobs();
     temp = poses.get(beat);
-    _lightStage.updateBeat(beat, temp.backdrop, temp.stage);
   }
   if(_knobState.stage >= 0){
     temp.stage = _knobState.stage;
     poses.put(beat, temp);
-    _lightStage.updateBeat(beat, temp.backdrop, temp.stage);
   }
   if(_knobState.backdrop >= 0){
     temp.backdrop = _knobState.backdrop;
     poses.put(beat, temp);
-    _lightStage.updateBeat(beat, temp.backdrop, temp.stage);
   }
-
+  
+  _motorState.updateMotors(temp.backdrop, temp.stage);
+  _lightStage.updateBeat(beat, temp.backdrop, temp.stage);
 }
 void Posegram::playEachPose(){
   poses.saveChanges();
@@ -99,6 +96,7 @@ void Posegram::playEachPose(){
     nextBeat();
     temp = poses.get(beat);
     _lightStage.updateBeat(beat, temp.stage, temp.backdrop);
+    _motorState.updateMotors(temp.backdrop, temp.stage);
   }
 }
 
