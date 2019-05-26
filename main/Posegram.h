@@ -20,6 +20,7 @@ class Posegram {
     void playEachPose();
     void followTheLeader();
     byte nextBeat();
+    void init();
   
   private:
     int poseLength;
@@ -27,7 +28,7 @@ class Posegram {
     byte lastBeat;
     long lastPose;
     long lastClick;
-    colorHSV pose;
+    Pose temp; // Pose struct loaded from MotorState.h...
     PoseData poses;
     
     KnobState _knobState;
@@ -59,6 +60,9 @@ Posegram::Posegram( KnobState *knobState, DutyStruct *X_INPUT, DutyStruct *Y_INP
 //    poses.put(i, pose);
 //  }
 }
+void Posegram::init(){
+  _motorState.init(9, 10);
+}
 
 byte Posegram::nextBeat(){
   if(lastClick < millis() - clickDebounce){
@@ -69,26 +73,22 @@ byte Posegram::nextBeat(){
 
 void Posegram::programPosition(){
   _knobState.updateKnobs();
-  _motorState.updateMotors(&_knobState);
-
   if(lastBeat != beat){
     lastBeat = beat;
     _knobState.lockKnobs();
-    pose = poses.get(beat);
-    _lightStage.updateBeat(beat, pose.h, pose.s, pose.b);
-  } else {
-    if(_knobState.x >= 0){
-      pose.h = map(_knobState.x, 0, 1023, 0, 65536);
-      poses.put(beat, pose);
-      _lightStage.updateBeat(beat, pose.h, pose.s, pose.b);
-    }
-    if(_knobState.y >= 0){
-      pose.b = map(_knobState.y, 0, 1023, 0, 255);
-      poses.put(beat, pose);
-      _lightStage.updateBeat(beat, pose.h, pose.s, pose.b);
-    }
+    temp = poses.get(beat);
   }
-
+  if(_knobState.stage >= 0){
+    temp.stage = _knobState.stage;
+    poses.put(beat, temp);
+  }
+  if(_knobState.backdrop >= 0){
+    temp.backdrop = _knobState.backdrop;
+    poses.put(beat, temp);
+  }
+  
+  _motorState.updateMotors(temp.backdrop, temp.stage);
+  _lightStage.updateBeat(beat, temp.backdrop, temp.stage);
 }
 void Posegram::playEachPose(){
   poses.saveChanges();
@@ -98,8 +98,9 @@ void Posegram::playEachPose(){
   if(lastPose < (millis() - poseLength)){
     lastPose = millis();
     nextBeat();
-    pose = poses.get(beat);
-    _lightStage.updateBeat(beat, pose.h, pose.s, pose.b);
+    temp = poses.get(beat);
+    _lightStage.updateBeat(beat, temp.stage, temp.backdrop);
+    _motorState.updateMotors(temp.backdrop, temp.stage);
   }
 }
 

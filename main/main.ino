@@ -7,18 +7,18 @@
 #include "Posegram.h"    // interfaces with EEPROM to remember poses programmed, X and Y, beats 1-8.
 #include "PinChangeInterrupt.h"
 
-#define KNOB_X            A0 // ADC0
-#define KNOB_Y            A1 // ADC1
-#define PWM_INPUT_X       2  // INT0
-#define PWM_INPUT_Y       3  // INT1
-#define MODESWITCH_PIN_A  4  // digitalRead
-#define MOTOR_X           5  // Clock 0 PWM
-#define NEOPIXEL_PIN      6  // Clock 0 PWM - shared with MOTOR X, don't push too many simultaneous events
-#define MODESWITCH_PIN_B  8  // digitalRead
-#define BROADCAST_X       9  // Clock 1 PWM
-#define BROADCAST_Y       10 // Clock 1 PWM
-#define MOTOR_Y           11 // Clock 2 PWM
-#define NEXTBEAT_PIN      12 // PCINT
+#define KNOB_X             A0 // ADC0
+#define KNOB_Y             A1 // ADC1
+#define PWM_INPUT_X        2  // INT0
+#define PWM_INPUT_Y        3  // INT1
+#define MODESWITCH_PIN_A   A4 // digitalRead
+#define BROADCAST_STAGE    5  // Clock 0 PWM
+#define NEOPIXEL_PIN       6  // Clock 0 PWM - shared with MOTOR X, don't push too many simultaneous events
+#define MODESWITCH_PIN_B   A5 // digitalRead
+#define MOTOR_STAGE        9  // Clock 1 PWM
+#define MOTOR_BACKDROP     10 // Clock 1 PWM
+#define BROADCAST_BACKDROP 11 // Clock 2 PWM
+#define NEXTBEAT_PIN       12 // PCINT
 
 
 KnobState knobState = {
@@ -31,16 +31,13 @@ ModeSwitch modeSwitch(
   MODESWITCH_PIN_A,
   MODESWITCH_PIN_B
 );
-MotorState motorState(
-  MOTOR_X,
-  MOTOR_Y
-);
+MotorState motorState;
 LightStage lightStage(
   NEOPIXEL_PIN
 );
 Broadcast broadcast(
-  BROADCAST_X,
-  BROADCAST_Y
+  BROADCAST_BACKDROP,
+  BROADCAST_STAGE
 );
 
 Posegram posegram(
@@ -59,10 +56,16 @@ void updateYHelper(){ Y_INPUT.dutyCycleUpdate(); }
 
 void setup() {
   Serial.begin(9600);
+  posegram.init();
+
   pinMode(NEXTBEAT_PIN, INPUT_PULLUP);
-  attachPCINT(digitalPinToPCINT(NEXTBEAT_PIN), nextBeatHelper, FALLING);
-  attachInterrupt(digitalPinToInterrupt(PWM_INPUT_X), updateXHelper, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(PWM_INPUT_Y), updateYHelper, CHANGE);
+  pinMode(KNOB_X,  INPUT_PULLUP);
+  pinMode(KNOB_Y,  INPUT_PULLUP);
+  
+  attachPCINT(digitalPinToPCINT(NEXTBEAT_PIN),        nextBeatHelper, FALLING);
+//  attachInterrupt(digitalPinToInterrupt(PWM_INPUT_X), updateXHelper,  CHANGE);
+//  attachInterrupt(digitalPinToInterrupt(PWM_INPUT_Y), updateYHelper,  CHANGE);
+//  
 }
 
 void loop() {

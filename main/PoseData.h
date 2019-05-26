@@ -1,20 +1,25 @@
 #include "MotorState.h" // includes definition for colorHSV, soon to be MotorState.pose...
 
+typedef struct {
+  short backdrop;
+  short stage;
+} Pose;
+
 class PoseData {
   private:
     int      address;
     long     lastModified;
     long     lastSave;
-    colorHSV temp;
-    colorHSV data[8];
+    Pose temp;    // Pose struct loaded from MotorState.h is {short stage, short backdrop}
+    Pose data[8]; // array of poses
 
   public:
     PoseData();
     void     saveChanges();
     void     loadFromEEPROM();
     void     saveToEEPROM();
-    colorHSV get(byte beatNumber);
-    void     put(byte beatNumber, colorHSV color);
+    Pose     get(byte beatNumber);
+    void     put(byte beatNumber, Pose pose);
     
 };
 
@@ -29,7 +34,7 @@ void PoseData::saveChanges(){
   
 void PoseData::loadFromEEPROM(){
   for(int i; i<8; i++){
-    address = i * sizeof(colorHSV);
+    address = i * sizeof(Pose);
     EEPROM.get(address, temp);
     data[i] = temp;
   }
@@ -37,16 +42,16 @@ void PoseData::loadFromEEPROM(){
 
 void PoseData::saveToEEPROM(){
   for(int i; i<8; i++){
-    address = i * sizeof(colorHSV);
+    address = i * sizeof(Pose);
     EEPROM.put(address, data[i]);
   }
 }
 
-colorHSV PoseData::get(byte index){
+Pose PoseData::get(byte index){
   return data[index];
 }
 
-void PoseData::put(byte index, colorHSV color){
+void PoseData::put(byte index, Pose pose){
   lastModified = millis();
-  data[index] = color;
+  data[index] = pose;
 }

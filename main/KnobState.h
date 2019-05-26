@@ -5,49 +5,49 @@
 
 class KnobState {
   public:
-    int x;
-    int y;
+    int backdrop;
+    int stage;
     KnobState();
     KnobState(int x_pin, int y_pin);
     void updateKnobs();
     void lockKnobs();
   private:
-    int _x;
-    int _locked_x;
-    int _y;
-    int _locked_y;
-    int _x_pin;
-    int _y_pin;
-    int xdiff();
-    int ydiff();
+    int _stage;
+    int _locked_stage;
+    int _backdrop;
+    int _locked_backdrop;
+    int _stage_pin;
+    int _backdrop_pin;
+    int stagediff();
+    int backdropdiff();
 };
 
 KnobState::KnobState(){}
-KnobState::KnobState(int x_pin, int y_pin){
-  _x_pin = x_pin;
-  _y_pin = y_pin;
+KnobState::KnobState(int stage_pin, int backdrop_pin){
+  _stage_pin = stage_pin;
+  _backdrop_pin = backdrop_pin;
 }
 
 void KnobState::lockKnobs(){
-  if(x >= 0){ _locked_x = x; }
-  if(y >= 0){ _locked_y = y; }
-  x = -1;
-  y = -1;
+  if(stage    >= 0){ _locked_stage    = stage; }
+  if(backdrop >= 0){ _locked_backdrop = backdrop; }
+  stage = -1;
+  backdrop = -1;
 }
 
 void KnobState::updateKnobs(){
-  _x = analogRead(_x_pin);
-  _y = analogRead(_y_pin);
+  _stage    = analogRead(_stage_pin);
+  _backdrop = analogRead(_backdrop_pin);
 
-  if(x >= 0 or xdiff() > LOCK_THRESHOLD){
-    x = _x;
+  if(backdrop >= 0 or backdropdiff() > LOCK_THRESHOLD){
+    backdrop = _backdrop;
   }
-  if(y >= 0 or ydiff() > LOCK_THRESHOLD){
-    y = _y;
+  if(stage >= 0 or stagediff() > LOCK_THRESHOLD){
+    stage = _stage;
   }
 }
 
-int KnobState::xdiff(){ return abs(_x - _locked_x); }
-int KnobState::ydiff(){ return abs(_y - _locked_y); }
+int KnobState::stagediff(){ return abs(_stage - _locked_stage); }
+int KnobState::backdropdiff(){ return abs(_backdrop - _locked_backdrop); }
 
 #endif

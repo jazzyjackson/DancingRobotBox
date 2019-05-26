@@ -1,38 +1,37 @@
 #ifndef MotorState_h
 #define MotorState_h
 
-#include "KnobState.h"
-
-typedef struct {
-  int h;
-  int s;
-  int b;
-} colorHSV;
+#include <Adafruit_TiCoServo.h>
 
 class MotorState {
   private:
-    int x_pin;
-    int y_pin;
-    int x;
-    int y;
+    int _backdrop_pin;
+    int _stage_pin;
+    Adafruit_TiCoServo servo_backdrop;
+    Adafruit_TiCoServo servo_stage;
 
   public:
-    MotorState(int servo_pin_x, int servo_pin_y);
     MotorState();
-    void updateMotors(KnobState *knobState);
+    void init(int stage_pin, int backdrop_pin);
+    void updateMotors(int stage, int backdrop);
 };
 
-MotorState::MotorState(){
-  
-}
-MotorState::MotorState(int servo_pin_x, int servo_pin_y){
-  x_pin = servo_pin_x;
-  y_pin = servo_pin_y;
+MotorState::MotorState(){}
+
+
+void MotorState::init(int stage_pin, int backdrop_pin){
+
+  servo_stage.attach(stage_pin);
+  servo_backdrop.attach(backdrop_pin);
+    
 }
 
-void MotorState::updateMotors(KnobState *knobState){
-//  if(*knobState->x >= 0){ servo_x.write(*knobState->x) };
-//  if(*knobState->y >= 0){ servo_y.write(*knobState->y) };
+
+void MotorState::updateMotors(int stage, int backdrop){
+  stage = map(stage, 0, 1023, 0, 180);
+  backdrop = map(backdrop, 0, 1023, 0, 180);
+  servo_stage.write(stage);
+  servo_backdrop.write(backdrop);
 }
 
 #endif

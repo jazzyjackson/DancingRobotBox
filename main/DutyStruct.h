@@ -24,8 +24,6 @@
 #ifndef DutyCycle_h
 #define DutyCycle_h
 
-#include "Arduino.h"
-
 typedef struct{
     byte pin;
     volatile short timeHigh;
