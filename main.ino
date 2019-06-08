@@ -7,8 +7,8 @@
 #include "Posegram.h"    // interfaces with EEPROM to remember poses programmed, X and Y, beats 1-8.
 #include "PinChangeInterrupt.h"
 
-#define KNOB_X             A0 // ADC0
-#define KNOB_Y             A1 // ADC1
+#define KNOB_X             A4 // ADC0 // v1: A0
+#define KNOB_Y             A5 // ADC1 // v1: A1
 #define PWM_INPUT_X        2  // INT0
 #define PWM_INPUT_Y        3  // INT1
 #define MODESWITCH_PIN_A   4  // digitalRead
@@ -18,7 +18,7 @@
 #define MOTOR_STAGE        9  // Clock 1 PWM
 #define MOTOR_BACKDROP     10 // Clock 1 PWM
 #define BROADCAST_BACKDROP 11 // Clock 2 PWM
-#define NEXTBEAT_PIN       12 // PCINT
+#define NEXTBEAT_PIN       0  // PCINT  // v1: 12
 
 
 KnobState knobState = {
