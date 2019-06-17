@@ -1,18 +1,19 @@
 #ifndef PoseData_h
 #define PoseData_h
 
-typedef struct {
-  short backdrop;
-  short stage;
-} Pose;
+#define NUM_POSES 8
+#include <EEPROM.h>
+
+#include "debug.h"
+#include "PoseStruct.h"
 
 class PoseData {
   private:
     int      address;
     long     lastModified;
     long     lastSave;
-    Pose temp;    // Pose struct loaded from MotorState.h is {short stage, short backdrop}
-    Pose data[8]; // array of poses
+    Pose temp;
+    Pose data[NUM_POSES]; // array of poses
 
   public:
     PoseData();
@@ -32,19 +33,21 @@ void PoseData::saveChanges(){
 }
   
 void PoseData::loadFromEEPROM(){
-  for(int i; i<8; i++){
+  for(int i = 0; i < 8; i++){
     address = i * sizeof(Pose);
     EEPROM.get(address, temp);
     data[i] = temp;
   }
+  debug("EEPROM: load:", data, NUM_POSES);
 }
 
 void PoseData::saveToEEPROM(){
   lastSave = millis();
-  for(int i; i<8; i++){
+  for(int i = 0; i < 8; i++){
     address = i * sizeof(Pose);
     EEPROM.put(address, data[i]);
   }
+  debug("EEPROM: saved:", data, NUM_POSES);
 }
 
 Pose PoseData::get(byte index){

@@ -63,7 +63,7 @@ void LightStage::updateBeat(byte beatNumber, short stageHue, short backdropHue) 
 
     strip.clear();
     strip.fill(backdropColor);
-    strip.setPixelColor(beatNumber, stageColor);
+    strip.setPixelColor(7 - beatNumber, stageColor);
     strip.show();
   }
 }

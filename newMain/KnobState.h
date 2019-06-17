@@ -1,7 +1,8 @@
 #ifndef KnobState_h
 #define KnobState_h
 
-#define LOCK_THRESHOLD 50
+#include "debug.h"
+#define LOCK_THRESHOLD 100
 
 class KnobState {
   public:
@@ -33,6 +34,8 @@ void KnobState::lockKnobs(){
   if(backdrop >= 0){ _locked_backdrop = backdrop; }
   stage = -1;
   backdrop = -1;
+  debug("KNOBS: Knobs locked, stage and backdrop should be negative one: %4d, %4d", stage, backdrop);
+  debug("KNOBS: Knobs locked, previous values for stage and backdrop is: %4d, %4d", _locked_stage, _locked_backdrop);
 }
 
 void KnobState::updateKnobs(){
@@ -40,9 +43,11 @@ void KnobState::updateKnobs(){
   _backdrop = analogRead(_backdrop_pin);
 
   if(backdrop >= 0 or backdropdiff() > LOCK_THRESHOLD){
+    debug("KNOBS: new value for %8s: %4d", "backdrop", _backdrop);
     backdrop = _backdrop;
   }
   if(stage >= 0 or stagediff() > LOCK_THRESHOLD){
+    debug("KNOBS: new value for %8s: %4d", "stage", _stage);
     stage = _stage;
   }
 }

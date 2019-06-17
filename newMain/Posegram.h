@@ -7,9 +7,13 @@
 #include "LightStage.h"  // provides simple interface to NeoPixels, avoids unnecessary writes
 #include "MotorState.h"  // writes positions to servos X and Y
 #include "PoseData.h"    // handles EEPROM, load on boot and save only when necessary
+#include "PoseStruct.h"
+#include "debug.h"
 
 #define clickDebounce 400
 #define defaultTempo 120
+
+
 
 class Posegram {
   public:
@@ -26,6 +30,7 @@ class Posegram {
     byte lastBeat;
     long lastPose;
     long lastClick;
+    void initPoses(int initValue);
     Pose temp; // Pose struct loaded from MotorState.h...
     PoseData poses;
     
@@ -47,11 +52,28 @@ Posegram::Posegram( KnobState *knobState, ModeSwitch *modeSwitch, MotorState *mo
 }
 
 void Posegram::init(){
+    debug("Posegram is initializing");
     _motorState.init();
     _lightStage.init();
     poses.loadFromEEPROM();
+    temp = poses.get(0);
+    if(temp.stage == -1 or temp.backdrop == -1){
+      initPoses(512); // half way between 0 and 1023, middle knob position
+    }
 }
 
+void Posegram::initPoses(int initValue){
+  temp.stage = initValue;
+  temp.backdrop = initValue;
+  for(int i = 0; i < 8; i++){
+    poses.put(i, temp);
+  }
+  poses.saveChanges();
+}
+
+/** nextBeat
+ *  called from ISR
+ */
 byte Posegram::nextBeat(){
   if(lastClick < millis() - clickDebounce){
       lastClick = millis();
