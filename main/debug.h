@@ -26,6 +26,17 @@ void debug(const char* formatstring, int firstarg, int secondarg){
 }
 
 void debug(const char* prefixstring, Pose* arrayptr, int arraylength){
+  // oh eff I'm probably just printing the first value of each struct hear...
+  Serial.print(prefixstring);
+  for(int i = 0; i < arraylength; i++){
+    sprintf(buf, "%4d", arrayptr[i]);
+    // sprintf(buf, "%4d %4d", arrayptr[i].stage, arrayptr[i].backdrop)
+    Serial.print(buf);
+  }
+  Serial.println("");
+}
+
+void debug(const char* prefixstring, int* arrayptr, int arraylength){
   Serial.print(prefixstring);
   for(int i = 0; i < arraylength; i++){
     sprintf(buf, "%4d", arrayptr[i]);

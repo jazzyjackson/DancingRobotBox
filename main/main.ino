@@ -67,7 +67,7 @@ void setup() {
 void loop() {
   switch(modeSwitch.getModeState()){
     case 0: posegram.programPosition(); break;
-    case 1: posegram.makeTempo();    break;
-    case 2: posegram.playEachPose(); break;
+    case 1: posegram.makeTempo();       break;
+    case 2: posegram.playEachPose();    break;
   }
 }
