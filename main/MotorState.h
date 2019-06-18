@@ -12,20 +12,28 @@ class MotorState {
 
   public:
     MotorState();
-    void init(int stage_pin, int backdrop_pin);
+    MotorState(int stage_pin, int backdrop_pin, bool MOTORS_SWAP_STAGE_BACKDROP);
+    void init();
     void updateMotors(int stage, int backdrop);
 };
 
 MotorState::MotorState(){}
+MotorState::MotorState(int stage_pin, int backdrop_pin, bool MOTORS_SWAP_STAGE_BACKDROP){
+  if(MOTORS_SWAP_STAGE_BACKDROP){
+    _stage_pin = backdrop_pin;
+    _backdrop_pin = stage_pin;
+  } else {
+    _stage_pin = stage_pin;
+    _backdrop_pin = backdrop_pin;
+  }
 
-
-void MotorState::init(int stage_pin, int backdrop_pin){
-
-  servo_stage.attach(stage_pin);
-  servo_backdrop.attach(backdrop_pin);
-    
 }
 
+void MotorState::init(){
+  servo_stage.attach(_stage_pin);
+  servo_backdrop.attach(_backdrop_pin);
+    
+}
 
 void MotorState::updateMotors(int stage, int backdrop){
   stage = map(stage, 0, 1023, 0, 180);

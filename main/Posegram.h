@@ -1,24 +1,48 @@
+/*
+ * Posegram.h includes most of the coordinating logic for DancingRobotBox
+ * After copying all the classes passed by reference into private variables,
+ * Posegram.init() is called from the setup(){} function in main.ino,
+ * which then calls MotorState.init() to perform servo.attach(),
+ * and then LightStage.init() to perform calls Adafruit strip.begin() and strip.clear()
+ *
+ * Also within init() we load 8 'Pose' structs from EEPROM,
+ * if the first memory location is '-1', this means nothing has ever been saved to EEPROM,
+ * and all 8 EEPROM locations are overwritten with {stage: 512, backdrop: 512} data structs,
+ * the center position as a good starting point. (All position values are 10bit, 0 - 1023)
+ *
+ * Every time around the loop(){} calls 1 of programPosition(), makeTempo(), or playEachPose()
+ *
+ * These functions rely on the posegram.nextBeat() ISR to update the 'beat' value, which represents
+ * the current beat to be programs, played, or measured for tempo.
+ *
+ * lastBeat and lastPose are checked before taking certain actions,
+ * if current beat == lastBeat, certain actions can be skipped / noop'd
+ *
+ */
+
+
 #ifndef Posegram_h
 #define Posegram_h
 
 #include <EEPROM.h>
 #include "ModeSwitch.h"  // handles 3-position throw switch
-#include "Broadcast.h"   // writes PWM output for pose-followers
-#include "DutyStruct.h"  // keeps up with the output from another bot's Broadcast
 #include "KnobState.h"   // keeps the state of the knobs, X and Y
 #include "LightStage.h"  // provides simple interface to NeoPixels, avoids unnecessary writes
 #include "MotorState.h"  // writes positions to servos X and Y
 #include "PoseData.h"    // handles EEPROM, load on boot and save only when necessary
+#include "PoseStruct.h"
+#include "debug.h"
 
 #define clickDebounce 400
 #define defaultTempo 120
 
+
 class Posegram {
   public:
-    Posegram(KnobState *knobState, DutyStruct *X_INPUT, DutyStruct *Y_INPUT, ModeSwitch *modeSwitch, MotorState *motorState, LightStage *lightStage, Broadcast *broadcast);
+    Posegram(KnobState *knobState, ModeSwitch *modeSwitch, MotorState *motorState, LightStage *lightStage);
     void programPosition();
     void playEachPose();
-    void followTheLeader();
+    void makeTempo();
     byte nextBeat();
     void init();
   
@@ -28,42 +52,50 @@ class Posegram {
     byte lastBeat;
     long lastPose;
     long lastClick;
+    void initPoses(int initValue);
     Pose temp; // Pose struct loaded from MotorState.h...
     PoseData poses;
     
     KnobState _knobState;
-    DutyStruct _X_INPUT;
-    DutyStruct _Y_INPUT;
     ModeSwitch _modeSwitch;
     MotorState _motorState;
     LightStage _lightStage;
-    Broadcast _broadcast;
 };
       
-Posegram::Posegram( KnobState *knobState, DutyStruct *X_INPUT, DutyStruct *Y_INPUT, ModeSwitch *modeSwitch, MotorState *motorState, LightStage *lightStage, Broadcast *broadcast){
+Posegram::Posegram( KnobState *knobState, ModeSwitch *modeSwitch, MotorState *motorState, LightStage *lightStage){
   _knobState = *knobState;
-  _X_INPUT = *X_INPUT;
-  _Y_INPUT = *Y_INPUT;
   _modeSwitch = *modeSwitch;
   _motorState = *motorState;
   _lightStage = *lightStage;
-  _broadcast = *broadcast;
   beat = 0;
   lastBeat = 7;
   lastPose = millis();
   lastClick = millis();
-  poses.loadFromEEPROM();
-
-  // cant decide how to check if valid data array is saved on EEPROM or if we should initialize... 
-//  for(int i = 0; i < 8; i++){
-//    pose = {120, 255, 120};
-//    poses.put(i, pose);
-//  }
 }
+
 void Posegram::init(){
-  _motorState.init(9, 10);
+    debug("Posegram is initializing");
+    _motorState.init();
+    _lightStage.init();
+    poses.loadFromEEPROM();
+    temp = poses.get(0);
+    if(temp.stage == -1 or temp.backdrop == -1){
+      initPoses(512); // half way between 0 and 1023, middle knob position
+    }
 }
 
+void Posegram::initPoses(int initValue){
+  temp.stage = initValue;
+  temp.backdrop = initValue;
+  for(int i = 0; i < 8; i++){
+    poses.put(i, temp);
+  }
+  poses.saveChanges();
+}
+
+/** nextBeat
+ *  called from ISR
+ */
 byte Posegram::nextBeat(){
   if(lastClick < millis() - clickDebounce){
       lastClick = millis();
@@ -87,9 +119,10 @@ void Posegram::programPosition(){
     poses.put(beat, temp);
   }
   
-  _motorState.updateMotors(temp.backdrop, temp.stage);
-  _lightStage.updateBeat(beat, temp.backdrop, temp.stage);
+  _motorState.updateMotors(temp.stage, temp.backdrop);
+  _lightStage.updateBeat(beat, temp.stage, temp.backdrop);
 }
+
 void Posegram::playEachPose(){
   poses.saveChanges();
   _knobState.lockKnobs();
@@ -100,10 +133,10 @@ void Posegram::playEachPose(){
     nextBeat();
     temp = poses.get(beat);
     _lightStage.updateBeat(beat, temp.stage, temp.backdrop);
-    _motorState.updateMotors(temp.backdrop, temp.stage);
+    _motorState.updateMotors(temp.stage, temp.backdrop);
   }
 }
 
-void Posegram::followTheLeader(){}
+void Posegram::makeTempo(){}
 
 #endif

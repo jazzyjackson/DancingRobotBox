@@ -1,24 +1,9 @@
-/*
- *
-  #define MODESWITCH_PIN_A 4
-  #define MODESWITCH_PIN_B 5
-  
-  ModeSwitch modeSwitch(MODESWITCH_PIN_A, MODESWITCH_PIN_B);
-  void loop() {
-    switch(modeSwitch.getModeState()){
-      case 0: programPosition(); break;
-      case 1: playEachPose();    break;
-      case 2: followTheLeader(); break;
-    }
-  }
-  
- */
 #ifndef ModeSwitch_h
 #define ModeSwitch_h
 
 class ModeSwitch{
   public:
-    ModeSwitch(int PIN_A, int PIN_B);
+    ModeSwitch(int PIN_A, int PIN_B, bool UPSIDEDOWN);
     ModeSwitch();
     byte getModeState();
 
@@ -28,20 +13,31 @@ class ModeSwitch{
 };
 
 ModeSwitch::ModeSwitch(){}
-ModeSwitch::ModeSwitch(int PIN_A, int PIN_B){
-  UPSIDE = PIN_A;
-  DOWNSIDE = PIN_B;
+ModeSwitch::ModeSwitch(int PIN_A, int PIN_B, bool UPSIDEDOWN){
+  if(UPSIDEDOWN){
+    UPSIDE = PIN_A;
+    DOWNSIDE = PIN_B;
+  } else {
+    DOWNSIDE = PIN_A;
+    UPSIDE = PIN_B;
+  }
   pinMode(UPSIDE, INPUT_PULLUP);
   pinMode(DOWNSIDE, INPUT_PULLUP);
 }
+
+/*  __   Mode Switch can be one of three positions
+ * |  |/ 0 "UP" position, used to program the poses
+   |  |- 1 "MIDDLE" position, for setting the tempo
+   |__|\ 2 "DOWN" position, to play all the poses
+ */
 
 byte ModeSwitch::getModeState(){
   if(digitalRead(UPSIDE) == LOW)
     return 0; // 'up', program mode
   else if(digitalRead(DOWNSIDE) == LOW)
-    return 1; // 'down', play mode
+    return 2; // 'down', play mode
   else 
-    return 2; // 'middle', follow mode
+    return 1; // 'middle', tempo mode
 }
 
 #endif

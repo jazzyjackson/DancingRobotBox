@@ -1,7 +1,6 @@
 #ifndef LightStage_h
 #define LightStage_h
 
-
 #include <Adafruit_NeoPixel.h>
 
 #define saturation 255
@@ -17,10 +16,13 @@ class LightStage {
   public:
     Adafruit_NeoPixel strip;
     LightStage();
-    LightStage(int pin);
+    LightStage(int pin, bool NEOPIXEL_BACKWARDS);
     void updateBeat(byte beatNumber, short backdropHue, short stageHue);
+    void init();
   private:
+    byte _pin;
     byte lastBeat;
+    bool _backwards;
     short lastBackdropHue;
     short lastStageHue;
     uint32_t backdropColor;
@@ -29,10 +31,10 @@ class LightStage {
 };
 
 LightStage::LightStage() {}
-LightStage::LightStage(int pin) {
+LightStage::LightStage(int pin, bool NEOPIXEL_BACKWARDS) {
+  _backwards = NEOPIXEL_BACKWARDS;
+  _pin = pin;
   lastBeat = 7;
-  strip = Adafruit_NeoPixel(8, pin); // 8 beats, 8 LEDs
-  strip.begin();
 }
 
 short LightStage::convert10to16bit(short value){
@@ -49,24 +51,36 @@ short LightStage::convert10to16bit(short value){
  * at the pre-defined saturation and brightnes (top of this file)
  * fills the neopixel strip with backdropColor, sets the pixel correponding with the beat to stage color
  */
-void LightStage::updateBeat(byte beatNumber, short backdropHue, short stageHue) {
+void LightStage::updateBeat(byte beatNumber, short stageHue, short backdropHue) {
   
   if (beatNumber != lastBeat or backdropHue != lastBackdropHue or stageHue != lastStageHue) {
     
-    backdropHue = convert10to16bit(backdropHue);
     stageHue = convert10to16bit(stageHue);
-    backdropColor = strip.gamma32(strip.ColorHSV(backdropHue, saturation, backdrop_brightness));
+    backdropHue = convert10to16bit(backdropHue);
+    
     stageColor    = strip.gamma32(strip.ColorHSV(stageHue, saturation, stage_brightness));
-
+    backdropColor = strip.gamma32(strip.ColorHSV(backdropHue, saturation, backdrop_brightness));
+   
     lastBeat = beatNumber;
 
     strip.clear();
     strip.fill(backdropColor);
-    strip.setPixelColor(beatNumber, stageColor);
-    strip.show();
+
+    if(_backwards){
+      strip.setPixelColor(7 - beatNumber, stageColor);
+    } else {
+      strip.setPixelColor(beatNumber, stageColor);
+    }
     
+    strip.show();
   }
-  
+}
+
+void LightStage::init(){
+  strip = Adafruit_NeoPixel(8, _pin); // 8 beats, 8 LEDs
+  strip.begin();
+  strip.clear();
+  strip.show();
 }
 
 #endif
