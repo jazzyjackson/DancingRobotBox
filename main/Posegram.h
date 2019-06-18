@@ -54,7 +54,7 @@ class Posegram {
   
   private:
     volatile byte  beat;         // 8 bit, max 255, only holds 0 - 7
-    volatile int   beatInterval; // 16bit, max 32,767, maxes out at 32 seconds between beats. unsigned would yeiled 64 seconds.
+    volatile int   lastInterval; // 16bit, max 32,767, maxes out at 32 seconds between beats. unsigned would yeiled 64 seconds.
     volatile long  lastClick;    // 32bit, max 2,147,483,647, about 24 days worth of milliseconds before we have to think about rollover.
 
     int poseLength;
@@ -65,7 +65,7 @@ class Posegram {
     long lastPose;
     int beatIntervals[NUM_BEAT_INTERVALS];
 
-    
+    void playThisPose(byte poseIndex);
     void initPoses(int initValue);
     Pose temp; // Pose struct loaded from MotorState.h...
     PoseData poses;
@@ -210,20 +210,20 @@ void Posegram::makeTempo(){
       beat = five;
       break;
     case six:
-      beatIntervals[0] = beatInterval;
+      beatIntervals[0] = lastInterval;
       playThisPose(six);
       break;
     case seven:
-      beatIntervals[1] = beatInterval;
+      beatIntervals[1] = lastInterval;
       playThisPose(seven);
       break;
     case eight:
-      beatIntervals[2] = beatInterval;
+      beatIntervals[2] = lastInterval;
       playThisPose(eight);
       break;
   }
   tempoModified = true;
-  debug("beat intervals are now:", beatIntervals, NUM_BEAT_INTERVALS)
+  debug("beat intervals are now:", beatIntervals, NUM_BEAT_INTERVALS);
 }
 
 #endif
