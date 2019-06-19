@@ -56,7 +56,7 @@ Posegram posegram(
 void nextBeatHelper(){ posegram.nextBeat(); }
 
 void setup() {
-  Serial.begin(9600);
+  // Serial.begin(9600); // uncomment Serial.begin to print debug statements. Makes a lot of the timing a little worse to be sending so many characters over Serial.
   debug("SETUP: Entering Setup");
   posegram.init();
   pinMode(NEXTBEAT_PIN, INPUT_PULLUP);
