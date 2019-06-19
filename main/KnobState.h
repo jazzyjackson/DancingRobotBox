@@ -44,8 +44,8 @@ void KnobState::lockKnobs(){
   if(backdrop >= 0){ _locked_backdrop = backdrop; }
   stage = -1;
   backdrop = -1;
-  debug("KNOBS: Knobs locked, stage and backdrop should be negative one: %4d, %4d", stage, backdrop);
-  debug("KNOBS: Knobs locked, previous values for stage and backdrop is: %4d, %4d", _locked_stage, _locked_backdrop);
+  // debug("KNOBS: Knobs locked, stage and backdrop should be negative one: %4d, %4d", stage, backdrop);
+  // debug("KNOBS: Knobs locked, previous values for stage and backdrop is: %4d, %4d", _locked_stage, _locked_backdrop);
 }
 
 void KnobState::updateKnobs(){

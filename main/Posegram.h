@@ -34,9 +34,11 @@
 #include "PoseStruct.h"
 #include "debug.h"
 
-#define clickDebounce 200
-#define defaultTempo 120
-#define NUM_BEAT_INTERVALS 3
+// debounce time between clicks is .1 second, or 100 milliseconds, or 100000 microseconds
+// tempo 120 bpm = 60 / 120 = 0.5s per cycle, or 500 milliseconds, or 500000 microseconds
+#define CLICK_DEBOUNCE       200000
+#define DEFAULT_POSE_LENGTH  500000
+#define NUM_BEAT_INTERVALS   3
 
 #define five  4
 #define six   5
@@ -53,20 +55,20 @@ class Posegram {
     void init();
   
   private:
-    volatile byte  beat;         // 8 bit, max 255, only holds 0 - 7
-    volatile int   lastInterval; // 16bit, max 32,767, maxes out at 32 seconds between beats. unsigned would yeiled 64 seconds.
-    volatile long  lastClick;    // 32bit, max 2,147,483,647, about 24 days worth of milliseconds before we have to think about rollover.
-
-    int poseLength;
-    int tempo;
-    int tempoSum;
+    void playThisPose();
+    void initPoses(int initValue);
+    
+    volatile byte beat;
+    volatile unsigned long  lastInterval; 
+    volatile unsigned long  lastClick;
+    
+    unsigned long beatIntervals[NUM_BEAT_INTERVALS];
+    unsigned long lastPose;
+    unsigned long poseLength;
+    
     bool tempoModified;
     byte lastBeat;
-    long lastPose;
-    int beatIntervals[NUM_BEAT_INTERVALS];
-
-    void playThisPose(byte poseIndex);
-    void initPoses(int initValue);
+    
     Pose temp; // Pose struct loaded from MotorState.h...
     PoseData poses;
     
@@ -83,10 +85,10 @@ Posegram::Posegram( KnobState *knobState, ModeSwitch *modeSwitch, MotorState *mo
   _lightStage   = *lightStage;
   beat          = 0;
   lastBeat      = 7;
-  tempo         = defaultTempo;
+  poseLength    = DEFAULT_POSE_LENGTH;
   tempoModified = false;
-  lastPose      = millis();
-  lastClick     = millis();
+  lastPose      = micros();
+  lastClick     = micros();
 }
 
 void Posegram::init(){
@@ -118,9 +120,9 @@ void Posegram::initPoses(int initValue){
  *  In the future, some hardware debouncing would be good.
  */
 byte Posegram::nextBeat(){
-  if(lastClick     < millis() - clickDebounce){
-      lastInterval = millis() - lastClick;
-      lastClick    = millis();
+  if(lastClick     < micros() - CLICK_DEBOUNCE){
+      lastInterval = micros() - lastClick;
+      lastClick    = micros();
       beat         = (beat + 1) % 8;
   }
 }
@@ -132,7 +134,7 @@ void Posegram::programPosition(){
     lastBeat = beat;
     _knobState.lockKnobs();
     temp = poses.get(beat);
-    playThisPose(beat);
+    playThisPose();
   }
 
   if(_knobState.stage >= 0){
@@ -147,7 +149,7 @@ void Posegram::programPosition(){
     poses.put(beat, temp);
     // don't have to poses.get(beat), because we're updated the local temp struct anyway
     // poses.get(beat) would be identical to the temp struct that we just put.
-    playThisPose(beat);
+    playThisPose();
   }
 }
 
@@ -167,29 +169,22 @@ void Posegram::programPosition(){
 void Posegram::playEachPose(){
   poses.saveChanges();
   _knobState.lockKnobs();
-  poseLength = 60000 / tempo; 
   
   //_knobState.stage
   if(tempoModified){
     tempoModified = false;
-    tempoSum = beatIntervals[0] + beatIntervals[1] + beatIntervals[2];
-    // tempoSum / 3 will be the average interval of 3 readings.
-    // 60000 / tempoSum / 3 will be the beats per minute used....
-    tempo = 60000 / (tempoSum / 3);
-
-    if(tempo < 30 or tempo > 200){
-      tempo = defaultTempo;
-    }
+    poseLength = (beatIntervals[0] + beatIntervals[1] + beatIntervals[2]) / 3;
   }
 
-  if(lastPose < (millis() - poseLength)){
-    lastPose = millis();
+  if(lastPose < (micros() - poseLength)){
+    debug("PoseLength is %lu", poseLength);
+    lastPose = micros();
     nextBeat();
-    playThisPose(beat);
+    playThisPose();
   }
 }
 
-void Posegram::playThisPose(byte poseIndex){
+void Posegram::playThisPose(){
     temp = poses.get(beat);
     _lightStage.updateBeat(beat, temp.stage, temp.backdrop);
     _motorState.updateMotors(temp.stage, temp.backdrop);
@@ -198,32 +193,41 @@ void Posegram::playThisPose(byte poseIndex){
 /* ## makeTempo()
  * 
  * In this mode, 
+ * 
  */
 void Posegram::makeTempo(){
   poses.saveChanges();
-  _knobState.lockKnobs();
   switch(beat){
     case 0:
     case 1:
     case 2:
     case 3:
+      // debug("advancing to five");
       beat = five;
+      playThisPose();
       break;
     case six:
+      // debug("beat is now six, saving interval one", lastInterval);
       beatIntervals[0] = lastInterval;
-      playThisPose(six);
+      playThisPose();
       break;
     case seven:
+      // debug("beat is now seven, saving interval two", lastInterval);
       beatIntervals[1] = lastInterval;
-      playThisPose(seven);
+      playThisPose();
       break;
     case eight:
+      // debug("beat is now eight, saving interval three", lastInterval);
       beatIntervals[2] = lastInterval;
-      playThisPose(eight);
+      playThisPose();
       break;
   }
-  tempoModified = true;
-  debug("beat intervals are now:", beatIntervals, NUM_BEAT_INTERVALS);
+  
+  if(beatIntervals[0] > 0 and beatIntervals[1] > 0 and beatIntervals[2] > 0){
+    tempoModified = true;
+  }
+  // debug("lastClick and lastInterval was: %12lu  ::   %12lu", lastClick, lastInterval);
+  // debug("beat intervals are now:", beatIntervals, NUM_BEAT_INTERVALS);
 }
 
 #endif
