@@ -1,0 +1,11 @@
+Week 1:
+  General architecture: surface mount parts or panel mount ? all one board or mother/daughterboard ?
+  Compile a list of possible parts:
+    1 DPDT 3-way toggle switch
+    2 potentiometer / knobs
+    8 WS2812 LED ✔️
+    1 normally off momentary button
+    
+    microservos
+    
+  
